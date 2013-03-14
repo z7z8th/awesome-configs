@@ -136,7 +136,7 @@ end
 -- theme_menu()
 
 -- Create a laucher widget and a main menu
-myawesomemenu = {
+awesomemenu = {
    { "manual", terminal .. " -e man awesome" },
    { "edit config", editor_cmd .. " " .. awesome.conffile },
 --   { "themes", thememenu },
@@ -144,14 +144,14 @@ myawesomemenu = {
    { "quit", awesome.quit }
 }
 
-mymainmenu = awful.menu({ items = { { "awesome", myawesomemenu, beautiful.awesome_icon },
+mainmenu = awful.menu({ items = { { "awesome", awesomemenu, beautiful.awesome_icon },
                                     { "Debian", debian.menu.Debian_menu.Debian },
                                     { "open terminal", terminal }
                                   }
                         })
 
-mylauncher = awful.widget.launcher({ image = image(beautiful.awesome_icon),
-                                     menu = mymainmenu })
+launcher = awful.widget.launcher({ image = image(beautiful.awesome_icon),
+                                     menu = mainmenu })
 -- }}}
 
 -- {{{ Wibox
@@ -164,23 +164,40 @@ separator.image = image(beautiful.widget_sep)
 -- }}}
 
 -- {{{ CPU usage and temperature
+function get_cpucount()
+    local s = 0
+    local cpuinfo = io.open("/proc/cpuinfo")
+    if cpuinfo then
+        for line in cpuinfo:lines() do
+            for processor in string.gmatch(line, "processor%s*:%s*%d+") do
+                s = s + 1
+            end
+        end
+    end
+    return s
+end
+
 cpuicon = widget({ type = "imagebox" })
 cpuicon.image = image(beautiful.widget_cpu)
-cpucount = 2
+cpucount = get_cpucount()
+cpuids = {}
 cpugraphs = {}
 tzswidgets = {}
 for s = 1, cpucount do
     -- Initialize widgets
     cpugraphs[s]  = awful.widget.graph()
     tzswidgets[s] = widget({ type = "textbox" })
+    cpuids[s] = widget({ type = "textbox" })
+    cpuids[s].text = tostring(s) 
     -- Graph properties
     cpugraphs[s]:set_width(40):set_height(14)
     cpugraphs[s]:set_background_color(beautiful.fg_off_widget)
     cpugraphs[s]:set_gradient_angle(0):set_gradient_colors({
     beautiful.fg_end_widget, beautiful.fg_center_widget, beautiful.fg_widget
-    }) -- Register widgets
-    vicious.register(cpugraphs[s],  vicious.widgets.cpu,      "$" .. (s+"1"))
-    vicious.register(tzswidgets[s], vicious.widgets.thermal, " $1C", 19, "thermal_zone" .. (s-"1"))
+    })
+    -- Register widgets
+    vicious.register(cpugraphs[s],  vicious.widgets.cpu,     "$" .. (s+"1"))
+    vicious.register(tzswidgets[s], vicious.widgets.thermal, "$1C", 19, "thermal_zone" .. (s-"1"))
 end
 -- }}}
 
@@ -413,34 +430,45 @@ for s = 1, scount do
     tasklist[s] = awful.widget.tasklist(function(c)
                                               return awful.widget.tasklist.label.currenttags(c, s)
                                           end, tasklist.buttons)
+                                          
+    cpulist = {}
+    for scpu = cpucount, 1, -1 do
+        table.insert(cpulist, { tzswidgets[scpu], cpugraphs[scpu].widget, cpuids[scpu], cpuicon, separator,
+                                    ["layout"] = awful.widget.layout.horizontal.rightleft })
+    end
+    cpulist["layout"] = awful.widget.layout.horizontal.rightleft
+
     -- Create the wibox
     wibox[s] = awful.wibox({      screen = s,
-        fg = beautiful.fg_normal, height = 12,
+        fg = beautiful.fg_normal, height = (s == 1 and scount ~= 1 and 14 or 12),
         bg = beautiful.bg_normal, position = "top",
         border_color = beautiful.border_focus,
         border_width = beautiful.border_width
     })
     -- Add widgets to the wibox
     wibox[s].widgets = {
-        {   mylauncher, taglist[s], layoutbox[s], separator, promptbox[s],
+        {   launcher, taglist[s], layoutbox[s], separator, promptbox[s],
             ["layout"] = awful.widget.layout.horizontal.leftright
         },
-        s == 1 and systray or nil,
-        separator, datewidget, dateicon,
-        separator, volwidget,  volbar.widget, volicon,
-        -- separator, orgwidget,  orgicon,
-        separator, mailwidget, mailicon,
-        separator, upicon,     netwidget, dnicon,
-        separator, fs.home.widget, fs.tmp.widget, fs.var.widget, fs.opt2.widget, 
-                    fs.opt.widget, fs.usr.widget, fs.root.widget, fsicon,
-        separator, membar.widget, memicon,
-        separator, batwidget, baticon,
-        -- for s2 = 1, cpucount do
-            separator, tzswidgets[1], cpugraphs[1].widget, cpuicon,
-            separator, tzswidgets[2], cpugraphs[2].widget, cpuicon,
-        -- end
-        tasklist[s],
-        separator, ["layout"] = awful.widget.layout.horizontal.rightleft
+        s == 1 and {
+            systray, separator,
+            ["layout"] = awful.widget.layout.horizontal.rightleft
+        } or nil,
+        datewidget, dateicon, separator,
+        (s == 2 or scount == 1) and {
+            volwidget,  volbar.widget, volicon, separator,
+            -- separator, orgwidget,  orgicon,
+            mailwidget, mailicon, separator,
+            upicon,     netwidget, dnicon, separator,
+            fs.home.widget, fs.tmp.widget, fs.var.widget, fs.opt2.widget, separator,
+                        fs.opt.widget, fs.usr.widget, fs.root.widget, fsicon, separator,
+            membar.widget, memicon, separator,
+            batwidget, baticon, separator,
+            cpulist,
+            ["layout"] = awful.widget.layout.horizontal.rightleft
+        } or nil,
+        tasklist[s], separator,
+        ["layout"] = awful.widget.layout.horizontal.rightleft
     }
 end
 -- }}}
@@ -650,8 +678,8 @@ awful.rules.rules = {
       border_width = beautiful.border_width,
       border_color = beautiful.border_normal }
     },
-    -- { rule = { class = "Firefox",  instance = "Navigator" },
-    --   properties = { tag = tags[scount][3] } },
+    -- { rule = { class = "Iceweasel",  instance = "Navigator" },
+    --   properties = { tag = mouse.screen][3] } },
     -- { rule = { class = "Emacs",    instance = "emacs" },
     --   properties = { tag = tags[1][2] } },
     -- { rule = { class = "Emacs",    instance = "_Remember_" },
