@@ -183,6 +183,7 @@ cpucount = get_cpucount()
 cpuids = {}
 cpugraphs = {}
 tzswidgets = {}
+if cpucount >= 4 then cpucount = cpucount / 2 end
 for s = 1, cpucount do
     -- Initialize widgets
     cpugraphs[s]  = awful.widget.graph()
@@ -433,7 +434,7 @@ for s = 1, scount do
                                           
     cpulist = {}
     for scpu = cpucount, 1, -1 do
-        table.insert(cpulist, { tzswidgets[scpu], cpugraphs[scpu].widget, cpuids[scpu], cpuicon, separator,
+        table.insert(cpulist, { tzswidgets[scpu], cpugraphs[scpu] and cpugraphs[scpu].widget or nil, cpuids[scpu], cpuicon, separator,
                                     ["layout"] = awful.widget.layout.horizontal.rightleft })
     end
     cpulist["layout"] = awful.widget.layout.horizontal.rightleft
