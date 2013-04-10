@@ -65,8 +65,9 @@ beautiful.init(home .. "/.config/awesome/zenburn.lua")
 
 -- This is used later as the default terminal and editor to run.
 terminal = "x-terminal-emulator"
+term_run = terminal .. " -e "
 editor = os.getenv("EDITOR") or "editor"
-editor_cmd = terminal .. " -e " .. editor
+editor_cmd = term_run .. editor
 
 
 -- Window management layouts
@@ -137,7 +138,7 @@ end
 
 -- Create a laucher widget and a main menu
 awesomemenu = {
-   { "manual", terminal .. " -e man awesome" },
+   { "manual", term_run .. "man awesome" },
    { "edit config", editor_cmd .. " " .. awesome.conffile },
 --   { "themes", thememenu },
    { "restart", awesome.restart },
@@ -246,7 +247,7 @@ for _, w in pairs(fs) do
      beautiful.fg_center_widget, beautiful.fg_end_widget
   }) -- Register buttons
   w.widget:buttons(awful.util.table.join(
-    awful.button({ }, 1, function () exec(terminal .. " -e 'watch -n1 df -h'", false) end)
+    awful.button({ }, 1, function () exec(term_run .. "'watch -n1 df -h'", false) end)
   ))
 end -- Enable caching
 vicious.cache(vicious.widgets.fs)
@@ -289,7 +290,7 @@ vicious.register(mailwidget, vicious.widgets.mdir, "$1", 181,
 -- Register buttons
 mailwidget:buttons(awful.util.table.join(
   -- awful.button({ }, 1, function () exec("urxvt -T Alpine -e alpine.exp") end)
-  awful.button({ }, 1, function () exec(terminal .. " -e mutt") end)
+  awful.button({ }, 1, function () exec(term_run .. "mutt") end)
 ))
 mailicon:buttons(mailwidget:buttons())
 -- }}}
@@ -340,7 +341,7 @@ vicious.register(volbar,    vicious.widgets.volume,  "$1",  2, "Master")
 vicious.register(volwidget, vicious.widgets.volume, " $1%", 2, "Master")
 -- Register buttons
 volbar.widget:buttons(awful.util.table.join(
-   awful.button({ }, 1, function () exec(terminal .. " -e alsamixer") end),
+   awful.button({ }, 1, function () exec(term_run .. "alsamixer") end),
    awful.button({ }, 4, function () exec("amixer -q set Master 2dB+", false) end),
    awful.button({ }, 5, function () exec("amixer -q set Master 2dB-", false) end)
 )) -- Register assigned buttons
@@ -356,7 +357,7 @@ datewidget = widget({ type = "textbox" })
 vicious.register(datewidget, vicious.widgets.date, "%a %d/%m %R", 61)
 -- Register buttons
 datewidget:buttons(awful.util.table.join(
-  awful.button({ }, 1, function () exec("pylendar.py") end)
+  awful.button({ }, 1, function () exec(term_run .. "sh -c 'cal -3 && cat'") end)
 ))
 -- }}}
 
