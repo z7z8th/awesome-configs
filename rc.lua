@@ -13,13 +13,14 @@
 -- {{{ Libraries
 require("awful")
 require("awful.rules")
-require("awful.autofocus")
+--require("awful.autofocus")
 -- Theme handling library
 require("beautiful")
 -- Notification library
 require("naughty")
 -- Load Debian menu entries
 require("debian.menu")
+
 
 -- User libraries
 vicious = require("vicious")
@@ -155,6 +156,61 @@ launcher = awful.widget.launcher({ image = image(beautiful.awesome_icon),
                                      menu = mainmenu })
 -- }}}
 
+-- {{{ quick launch bar, REF: http://awesome.naquadah.org/wiki/Quick_launch_bar
+local icon_exts = { "png", "xpm", "svg" }
+ 
+ -- Quick launch bar widget BEGINS
+function find_icon(icon_name, icon_dirs)
+   if string.sub(icon_name, 1, 1) == '/' then
+      if awful.util.file_readable(icon_name) then
+          return icon_name
+       else
+          return nil
+       end
+    end
+    local icon_path = awful.util.geticonpath(icon_name, icon_exts, icon_dirs);
+    print(icon_name .. " <=> " .. (icon_path or ""))
+    return icon_path
+ end
+ 
+function getValue(t, key)
+   _, _, res = string.find(t, key .. " *= *([^%c]+)%c")
+    return res
+ end
+ 
+ launchbar = { ["layout"] = awful.widget.layout.horizontal.leftright }
+ filedir = home.."/Desktop/" -- Specify your folder with shortcuts here
+ local items = {}
+ local files = io.popen("ls " .. filedir .. "*.desktop")
+ for f in files:lines() do
+    print( "@@ QuickLaunch: "..f)
+    local t = io.open(f):read("*all")
+    print("Exec="..getValue(t, "Exec"))
+    print("Name="..getValue(t, "Name"))
+    table.insert(items, { image = find_icon(getValue(t,"Icon"), 
+					    { "/usr/share/pixmaps", 
+					      "/usr/share/icons/hicolor/",
+					      home .. "/.local/share/icons/hicolor/32x32/apps/",
+					      home .. "/.local/share/icons/hicolor/",
+					      home .. "/.local/share/icons/"}),
+			  command = getValue(t,"Exec"),
+			  tooltip = getValue(t,"Name"),
+			  position = tonumber(getValue(t,"Position")) or 255 })
+ end
+ table.sort(items, function(a,b) return a.position < b.position end)
+ for i = 1, table.getn(items) do
+    print("@@ Got Items:", i)
+    --     local txt = launchbar[i].tooltip
+    launchbar[i] = awful.widget.launcher(items[i])
+    --     local tt = awful.tooltip ({ objects = { launchbar[i] } })
+    --     tt:set_text (txt)
+    --     tt:set_timeout (0)
+ end
+ 
+ -- Quick launch bar widget ENDS
+
+-- }}}
+
 -- {{{ Wibox
 --
 -- {{{ Widgets configuration
@@ -192,7 +248,7 @@ for s = 1, cpucount do
     cpuids[s] = widget({ type = "textbox" })
     cpuids[s].text = tostring(s) 
     -- Graph properties
-    cpugraphs[s]:set_width(40):set_height(14)
+    cpugraphs[s]:set_width(40):set_height(18)
     cpugraphs[s]:set_background_color(beautiful.fg_off_widget)
     cpugraphs[s]:set_gradient_angle(0):set_gradient_colors({
     beautiful.fg_end_widget, beautiful.fg_center_widget, beautiful.fg_widget
@@ -240,7 +296,7 @@ fs = {
 -- Progressbar properties
 for _, w in pairs(fs) do
   w:set_vertical(true):set_ticks(true)
-  w:set_height(14):set_width(5):set_ticks_size(2)
+  w:set_height(18):set_width(5):set_ticks_size(2)
   w:set_border_color(beautiful.border_widget)
   w:set_background_color(beautiful.fg_off_widget)
   w:set_gradient_colors({ beautiful.fg_widget,
@@ -442,7 +498,7 @@ for s = 1, scount do
 
     -- Create the wibox
     wibox[s] = awful.wibox({      screen = s,
-        fg = beautiful.fg_normal, height = (s == 1 and scount ~= 1 and 14 or 12),
+        fg = beautiful.fg_normal, height = (s == 1 and scount ~= 1 and 18 or 18),
         bg = beautiful.bg_normal, position = "top",
         border_color = beautiful.border_focus,
         border_width = beautiful.border_width
@@ -452,6 +508,8 @@ for s = 1, scount do
         {   launcher, taglist[s], layoutbox[s], separator, promptbox[s],
             ["layout"] = awful.widget.layout.horizontal.leftright
         },
+	s == 1 and { launchbar, separator, 
+		     ["layout"] = awful.widget.layout.horizontal.leftright } or nil,
         s == 1 and {
             systray, separator,
             ["layout"] = awful.widget.layout.horizontal.rightleft
@@ -462,10 +520,10 @@ for s = 1, scount do
             -- separator, orgwidget,  orgicon,
             mailwidget, mailicon, separator,
             upicon,     netwidget, dnicon, separator,
-            fs.home.widget, fs.tmp.widget, fs.var.widget, fs.opt2.widget, separator,
-                        fs.opt.widget, fs.usr.widget, fs.root.widget, fsicon, separator,
+            -- fs.home.widget, fs.tmp.widget, fs.var.widget, fs.opt2.widget, separator,
+            --             fs.opt.widget, fs.usr.widget, fs.root.widget, fsicon, separator,
             membar.widget, memicon, separator,
-            batwidget, baticon, separator,
+            -- batwidget, baticon, separator,
             cpulist,
             ["layout"] = awful.widget.layout.horizontal.rightleft
         } or nil,
@@ -511,6 +569,8 @@ globalkeys = awful.util.table.join(
     awful.key({ altkey }, "#51", function () if boosk then osk(nil, mouse.screen)
         else boosk, osk = pcall(require, "osk") end
     end),
+    awful.key({}, "Print", function () sexec("scrot -q 90 -e 'mkdir -p ~/screenshots; mv \"$f\" ~/screenshots/'") end),
+    awful.key({altkey}, "Print", function () sexec("scrot -q 90 -u -e 'mkdir -p ~/screenshots; mv \"$f\" ~/screenshots/'") end),
     -- }}}
 
     -- {{{ Multimedia keys
@@ -610,7 +670,8 @@ clientkeys = awful.util.table.join(
     awful.key({ modkey }, "f", function (c) c.fullscreen = not c.fullscreen end),
     awful.key({ modkey }, "m", function (c)
         c.maximized_horizontal = not c.maximized_horizontal
-        c.maximized_vertical   = not c.maximized_vertical
+        -- c.maximized_vertical   = not c.maximized_vertical
+        c.maximized_vertical   = c.maximized_horizontal
     end),
     awful.key({ modkey }, "o",     awful.client.movetoscreen),
     awful.key({ modkey }, "Next",  function () awful.client.moveresize( 20,  20, -40, -40) end),
