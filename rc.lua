@@ -94,7 +94,7 @@ tags = {
   -- layout = { layouts[6], layouts[6], layouts[6], layouts[6], layouts[6],
   --            layouts[6], layouts[6], layouts[6], layouts[6]
   names  = { "term ", "log ", "web ", "ref ", "cod" },
-  layout = { layouts[6], layouts[6], layouts[6], layouts[6], layouts[6]
+  layout = { layouts[6], layouts[6], layouts[4], layouts[6], layouts[4]
 }}
 
 for s = 1, scount do
@@ -814,3 +814,8 @@ for s = 1, scount do screen[s]:add_signal("arrange", function ()
 end
 -- }}}
 -- }}}
+
+
+-- http://awesome.naquadah.org/wiki/Autostart
+-- auto start with dex: https://github.com/jceb/dex
+awful.util.spawn_with_shell("$HOME/bin/dex -a -e Awesome")
