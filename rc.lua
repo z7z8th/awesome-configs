@@ -94,7 +94,7 @@ tags = {
   -- layout = { layouts[6], layouts[6], layouts[6], layouts[6], layouts[6],
   --            layouts[6], layouts[6], layouts[6], layouts[6]
   names  = { "term ", "log ", "web ", "ref ", "cod" },
-  layout = { layouts[6], layouts[6], layouts[4], layouts[6], layouts[4]
+  layout = { layouts[1], layouts[1], layouts[4], layouts[1], layouts[4]
 }}
 
 for s = 1, scount do
@@ -650,7 +650,12 @@ globalkeys = awful.util.table.join(
         if client.focus then client.focus:raise() end
     end),
     awful.key({ altkey }, "Tab", function ()
-        awful.client.focus.history.previous()
+        if not client.focus then
+             clients = client.get()
+             for i,c in next,clients,nil do
+                if c:isvisible() then awful.client.focus.byidx(0, c) break; end
+             end
+        else awful.client.focus.byidx(1) end
         if client.focus then client.focus:raise() end
     end),
     awful.key({ altkey }, "Escape", function ()
@@ -672,6 +677,7 @@ clientkeys = awful.util.table.join(
         c.maximized_horizontal = not c.maximized_horizontal
         -- c.maximized_vertical   = not c.maximized_vertical
         c.maximized_vertical   = c.maximized_horizontal
+        awful.client.floating.set(c, false)
     end),
     awful.key({ modkey }, "o",     awful.client.movetoscreen),
     awful.key({ modkey }, "Next",  function () awful.client.moveresize( 20,  20, -40, -40) end),
@@ -801,7 +807,8 @@ client.add_signal("unfocus", function (c) c.border_color = beautiful.border_norm
 -- }}}
 
 -- {{{ Arrange signal handler
-for s = 1, scount do screen[s]:add_signal("arrange", function ()
+for s = 1, scount do
+    screen[s]:add_signal("arrange", function ()
     local clients = awful.client.visible(s)
     local layout = awful.layout.getname(awful.layout.get(s))
 
