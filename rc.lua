@@ -518,7 +518,7 @@ for s = 1, scount do
         (s == 2 or scount == 1) and {
             volwidget,  volbar.widget, volicon, separator,
             -- separator, orgwidget,  orgicon,
-            mailwidget, mailicon, separator,
+            -- mailwidget, mailicon, separator,
             upicon,     netwidget, dnicon, separator,
             -- fs.home.widget, fs.tmp.widget, fs.var.widget, fs.opt2.widget, separator,
             --             fs.opt.widget, fs.usr.widget, fs.root.widget, fsicon, separator,
@@ -575,15 +575,15 @@ globalkeys = awful.util.table.join(
 
     -- {{{ Multimedia keys
     awful.key({}, "#160", function () exec("xscreensaver-command -lock") end),
-  --awful.key({}, "#121", function () exec("pvol.py -m") end),
-    awful.key({}, "#122", function () exec("pvol.py -p -c -2") end),
-    awful.key({}, "#123", function () exec("pvol.py -p -c  2") end),
-    awful.key({}, "#232", function () exec("plight.py -s") end),
-    awful.key({}, "#233", function () exec("plight.py -s") end),
-  --awful.key({}, "#150", function () exec("sudo /usr/sbin/pm-suspend")   end),
+  -- awful.key({}, "#121", function () exec("pvol.py -m") end),
+  -- awful.key({}, "#122", function () exec("pvol.py -p -c -2") end),
+  -- awful.key({}, "#123", function () exec("pvol.py -p -c  2") end),
+  -- awful.key({}, "#232", function () exec("plight.py -s") end),
+  -- awful.key({}, "#233", function () exec("plight.py -s") end),
+  -- awful.key({}, "#150", function () exec("sudo /usr/sbin/pm-suspend")   end),
     awful.key({}, "#213", function () exec("sudo /usr/sbin/pm-hibernate") end),
-  --awful.key({}, "#235", function () exec("xset dpms force off") end),
-    awful.key({}, "#235", function () exec("pypres.py") end),
+  -- awful.key({}, "#235", function () exec("xset dpms force off") end),
+  -- awful.key({}, "#235", function () exec("pypres.py") end),
     awful.key({}, "#244", function () sexec("acpitool -b | xmessage -timeout 10 -file -")   end),
     -- }}}
 
@@ -631,8 +631,8 @@ globalkeys = awful.util.table.join(
     -- {{{ Layout manipulation
     awful.key({ modkey }, "l",          function () awful.tag.incmwfact( 0.05) end),
     awful.key({ modkey }, "h",          function () awful.tag.incmwfact(-0.05) end),
-    awful.key({ modkey, "Shift" }, "l", function () awful.client.incwfact(-0.05) end),
-    awful.key({ modkey, "Shift" }, "h", function () awful.client.incwfact( 0.05) end),
+    awful.key({ modkey, "Shift" }, "l", function () awful.client.incwfact( 0.05) end),
+    awful.key({ modkey, "Shift" }, "h", function () awful.client.incwfact(-0.05) end),
     awful.key({ modkey, "Shift" }, "space", function () awful.layout.inc(layouts, -1) end),
     awful.key({ modkey },          "space", function () awful.layout.inc(layouts,  1) end),
     -- }}}
@@ -658,6 +658,15 @@ globalkeys = awful.util.table.join(
         else awful.client.focus.byidx(1) end
         if client.focus then client.focus:raise() end
     end),
+    awful.key({ altkey, "Shift" }, "Tab", function ()
+        if not client.focus then
+             clients = client.get()
+             for i,c in next,clients,nil do
+                if c:isvisible() then awful.client.focus.byidx(0, c) break; end
+             end
+        else awful.client.focus.byidx(-1) end
+        if client.focus then client.focus:raise() end
+    end),
     awful.key({ altkey }, "Escape", function ()
         awful.menu.menu_keys.down = { "Down", "Alt_L" }
         local cmenu = awful.menu.clients({width=230}, { keygrabber=true, coords={x=525, y=330} })
@@ -670,7 +679,7 @@ globalkeys = awful.util.table.join(
 
 -- {{{ Client manipulation
 clientkeys = awful.util.table.join(
-    awful.key({ modkey }, "c", function (c) c:kill() end),
+    awful.key({ modkey }, "c", function (c) awful.client.focus.byidx(1); c:kill() end),
     awful.key({ modkey }, "d", function (c) scratch.pad.set(c, 0.60, 0.60, true) end),
     awful.key({ modkey }, "f", function (c) c.fullscreen = not c.fullscreen end),
     awful.key({ modkey }, "m", function (c)
@@ -731,6 +740,14 @@ for i = 1, keynumber do
                 awful.client.toggletag(tags[client.focus.screen][i])
             end
         end))
+end
+-- }}}
+
+-- {{{ Screen controls
+for i = 1, scount do
+   globalkeys = awful.util.table.join( globalkeys,
+                    awful.key({ modkey }, "F" .. i, function () awful.screen.focus(i) 
+                end))
 end
 -- }}}
 
