@@ -351,7 +351,7 @@ mailwidget:buttons(awful.util.table.join(
 mailicon:buttons(mailwidget:buttons())
 -- }}}
 
--- -- {{{ Org-mode agenda
+-- {{{ Org-mode agenda
 -- orgicon = widget({ type = "imagebox" })
 -- orgicon.image = image(beautiful.widget_org)
 -- -- Initialize widget
@@ -376,7 +376,7 @@ mailicon:buttons(mailwidget:buttons())
 --   awful.button({ }, 1, function () exec("emacsclient --eval '(org-agenda-list)'") end),
 --   awful.button({ }, 3, function () exec("emacsclient --eval '(make-remember-frame)'") end)
 -- ))
--- -- }}}
+-- }}}
 
 -- {{{ Volume level
 volicon = widget({ type = "imagebox" })
@@ -488,7 +488,15 @@ for s = 1, scount do
     tasklist[s] = awful.widget.tasklist(function(c)
                                               return awful.widget.tasklist.label.currenttags(c, s)
                                           end, tasklist.buttons)
-                                          
+    -- Create the wibox
+    wibox[s] = awful.wibox({      screen = s,
+        fg = beautiful.fg_normal, height = (s == 1 and scount ~= 1 and 18 or 20),
+        bg = beautiful.bg_normal, position = "top",
+        border_color = beautiful.border_focus,
+        border_width = beautiful.border_width
+    })
+
+    -- Create CPU widgets
     cpulist = {}
     for scpu = cpucount, 1, -1 do
         table.insert(cpulist, { tzswidgets[scpu], cpugraphs[scpu] and cpugraphs[scpu].widget or nil, cpuids[scpu], cpuicon, separator,
@@ -496,19 +504,13 @@ for s = 1, scount do
     end
     cpulist["layout"] = awful.widget.layout.horizontal.rightleft
 
-    -- Create the wibox
-    wibox[s] = awful.wibox({      screen = s,
-        fg = beautiful.fg_normal, height = (s == 1 and scount ~= 1 and 18 or 18),
-        bg = beautiful.bg_normal, position = "top",
-        border_color = beautiful.border_focus,
-        border_width = beautiful.border_width
-    })
+
     -- Add widgets to the wibox
     wibox[s].widgets = {
         {   launcher, taglist[s], layoutbox[s], separator, promptbox[s],
             ["layout"] = awful.widget.layout.horizontal.leftright
         },
-	s == 1 and { launchbar, separator, 
+        s == 1 and { launchbar, separator, 
 		     ["layout"] = awful.widget.layout.horizontal.leftright } or nil,
         s == 1 and {
             systray, separator,
@@ -552,6 +554,42 @@ clientbuttons = awful.util.table.join(
 
 -- {{{ Key bindings
 --
+-- @order: true to focus next, false to focus previous
+local function focus_curtag_next(order)
+   -- print("*****************")
+   -- cf = client.focus
+   -- print("client.focus: ", cf and cf.name or nil, cf and cf.class or nil)
+   local tag = awful.tag.selected()
+   local clients = tag:clients()
+   -- print("A-Tab: num of clients: ", table.getn(clients))
+   -- for i,c in next,clients,nil do
+   --    print("i=", i, ", name=", c.name, ", class=", c.class)
+   -- end
+   local next_client = #clients > 0 and clients[1] or nil
+   for i,c in next,clients,nil do
+      -- print("c.name=", c.name)
+      if c == client.focus then
+         if order then
+            i = i < #clients and i + 1 or 1
+         else
+            i = i > 1 and i - 1 or #clients
+         end
+         next_client = clients[i]
+         break
+      end
+   end
+   -- print("=============")
+   if next_client then
+      -- print("next_client: ", next_client.name, ", ", next_client.class, ", ", next_client:isvisible(), ", ", next_client.ontop)
+      awful.client.focus.byidx(0, next_client)
+      client.focus = next_client
+      next_client:raise()
+      next_client.minimized = false
+   else
+      -- print("next_client: none")
+   end
+end
+
 -- {{{ Global keys
 globalkeys = awful.util.table.join(
     -- {{{ Applications
@@ -650,22 +688,10 @@ globalkeys = awful.util.table.join(
         if client.focus then client.focus:raise() end
     end),
     awful.key({ altkey }, "Tab", function ()
-        if not client.focus then
-             clients = client.get()
-             for i,c in next,clients,nil do
-                if c:isvisible() then awful.client.focus.byidx(0, c) break; end
-             end
-        else awful.client.focus.byidx(1) end
-        if client.focus then client.focus:raise() end
+                 focus_curtag_next(true)
     end),
     awful.key({ altkey, "Shift" }, "Tab", function ()
-        if not client.focus then
-             clients = client.get()
-             for i,c in next,clients,nil do
-                if c:isvisible() then awful.client.focus.byidx(0, c) break; end
-             end
-        else awful.client.focus.byidx(-1) end
-        if client.focus then client.focus:raise() end
+                 focus_curtag_next(false)
     end),
     awful.key({ altkey }, "Escape", function ()
         awful.menu.menu_keys.down = { "Down", "Alt_L" }
