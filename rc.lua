@@ -688,10 +688,10 @@ globalkeys = awful.util.table.join(
         if client.focus then client.focus:raise() end
     end),
     awful.key({ altkey }, "Tab", function ()
-                 focus_curtag_next(true)
+        focus_curtag_next(true)
     end),
     awful.key({ altkey, "Shift" }, "Tab", function ()
-                 focus_curtag_next(false)
+        focus_curtag_next(false)
     end),
     awful.key({ altkey }, "Escape", function ()
         awful.menu.menu_keys.down = { "Down", "Alt_L" }
