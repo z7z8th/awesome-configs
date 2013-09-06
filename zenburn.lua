@@ -4,6 +4,7 @@
 --    License:  GNU GPL v2   --
 -------------------------------
 
+awful = require("awful")
 
 -- {{{ Main
 theme = {}
