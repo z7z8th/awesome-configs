@@ -31,6 +31,24 @@ local vicious = require("vicious")
 local scratch = require("scratch")
 -- }}}
 
+
+function __mydump(o)
+    if type(o) == 'table' then
+        local s = '{ '
+        for k,v in pairs(o) do
+            if type(k) ~= 'number' then k = '"'..k..'"' end
+            s = s .. '['..k..'] = ' .. __mydump(v) .. ','
+        end
+        return s .. '} '
+    else
+        return tostring(o)
+    end
+end
+
+function mydump(title, o)
+    print(title, __mydump(o))
+end
+
 -- {{{ Error handling
 -- Check if awesome encountered an error during startup and fell back to
 -- another config (This code will only ever execute for the fallback config)
@@ -61,12 +79,16 @@ local altkey = "Mod1"
 local modkey = "Mod4"
 
 local home   = os.getenv("HOME")
+local cfg_path = awful.util.getdir("config")
 local exec   = awful.util.spawn
 local sexec  = awful.util.spawn_with_shell
 local scount = screen.count()
 
 -- Beautiful theme
-beautiful.init(home .. "/.config/awesome/zenburn.lua")
+beautiful.init(cfg_path .. "/themes/zenburn/theme.lua")
+local theme = beautiful.get()
+-- mydump("beautiful: ", beautiful)
+-- mydump("beautiful.get: ", beautiful.get())
 
 -- This is used later as the default terminal and editor to run.
 terminal = "x-terminal-emulator"
@@ -118,8 +140,6 @@ end
 thememenu = {}
 
 function theme_load(theme)
-   local cfg_path = awful.util.getdir("config")
-
    -- Create a symlink from the given theme to /home/user/.config/awesome/current_theme
    awful.util.spawn("ln -sfn " .. cfg_path .. "/themes/" .. theme .. " " .. cfg_path .. "/current_theme")
    awesome.restart()
@@ -127,7 +147,7 @@ end
 
 function theme_menu()
    -- List your theme files and feed the menu table
-   local cmd = "ls -1 " .. awful.util.getdir("config") .. "/themes/"
+   local cmd = "ls -1 " .. cfg_path .. "/themes/"
    local f = io.popen(cmd)
 
    for l in f:lines() do
@@ -150,14 +170,14 @@ awesomemenu = {
    { "quit", awesome.quit }
 }
 
-mainmenu = awful.menu({ items = { { "awesome", awesomemenu, beautiful.awesome_icon },
+mainmenu = awful.menu({ items = { { "awesome", awesomemenu, theme.awesome_icon },
 --                                    { "Debian", debian.menu.Debian_menu.Debian },
                                     { "open terminal", terminal }
                                   },
                         theme = { width = 300, height = 30 }
                         })
 
-launcher = awful.widget.launcher({ image = beautiful.awesome_icon,
+launcher = awful.widget.launcher({ image = theme.awesome_icon,
                                      menu = mainmenu })
 -- }}}
 
@@ -221,7 +241,7 @@ launchbar = {}
 -- {{{ Widgets configuration
 --
 -- {{{ Reusable separator
-separator = wibox.widget.imagebox(beautiful.widget_sep)
+separator = wibox.widget.imagebox(theme.widget_sep)
 -- }}}
 
 -- {{{ CPU usage and temperature
@@ -238,7 +258,7 @@ function get_cpucount()
     return s
 end
 
-cpuicon = wibox.widget.imagebox(beautiful.widget_cpu)
+cpuicon = wibox.widget.imagebox(theme.widget_cpu)
 cpucount = get_cpucount()
 cpuids = {}
 cpugraphs = {}
@@ -246,16 +266,16 @@ tzswidgets = {}
 if cpucount >= 4 then cpucount = cpucount / 2 end
 for s = 1, cpucount do
     -- Initialize widgets
-    cpugraphs[s]  = awful.widget.progressbar()
+    cpugraphs[s]  = awful.widget.graph()
     tzswidgets[s] = wibox.widget.textbox()
-    cpuids[s] = wibox.widget.textbox()
-    cpuids[s].text = tostring(s) 
+    cpuids[s] = wibox.widget.textbox(tostring(s))
+    -- cpuids[s].text = tostring(s) 
     -- Graph properties
-    cpugraphs[s]:set_width(40):set_height(18)
-    cpugraphs[s]:set_background_color(beautiful.fg_off_widget)
-    cpugraphs[s]:set_color({ type = "linear", from = { 0, 0 }, to = { 0, 20 }, stops = { { 0, "#ff0000" }, { 0.5, "#00ff00" }, { 1, "#0000ff" } }})
+    cpugraphs[s]:set_width(40)
+    cpugraphs[s]:set_background_color(theme.fg_off_widget)
+    cpugraphs[s]:set_color({ type = "linear", from = { 40, 0 }, to = { 0, 0 }, stops = { { 0, theme.fg_end_widget }, { 0.5, theme.fg_center_widget }, { 1, theme.fg_widget } }})
     -- cpugraphs[s]:set_gradient_angle(0):set_gradient_colors({
-    -- beautiful.fg_end_widget, beautiful.fg_center_widget, beautiful.fg_widget
+    -- theme.fg_end_widget, theme.fg_center_widget, theme.fg_widget
     -- })
     -- Register widgets
     vicious.register(cpugraphs[s],  vicious.widgets.cpu,     "$" .. (s+"1"))
@@ -264,7 +284,7 @@ end
 -- }}}
 
 -- {{{ Battery state
-baticon = wibox.widget.imagebox(beautiful.widget_bat)
+baticon = wibox.widget.imagebox(theme.widget_bat)
 -- Initialize widget
 batwidget = wibox.widget.textbox()
 -- Register widget
@@ -272,23 +292,23 @@ vicious.register(batwidget, vicious.widgets.bat, "$1$2%", 61, "BAT0")
 -- }}}
 
 -- {{{ Memory usage
-memicon = wibox.widget.imagebox(beautiful.widget_mem)
+memicon = wibox.widget.imagebox(theme.widget_mem)
 -- Initialize widget
 membar = awful.widget.progressbar()
 -- Pogressbar properties
 membar:set_vertical(true):set_ticks(true)
-membar:set_height(12):set_width(8):set_ticks_size(2)
-membar:set_background_color(beautiful.fg_off_widget)
-membar:set_color({ type = "linear", from = { 0, 0 }, to = { 0, 20 }, stops = { { 0, "#ff0000" }, { 0.5, "#00ff00" }, { 1, "#0000ff" } }})
--- membar:set_gradient_colors({ beautiful.fg_widget,
---    beautiful.fg_center_widget, beautiful.fg_end_widget
+membar:set_width(8):set_ticks_size(2)
+membar:set_background_color(theme.fg_off_widget)
+membar:set_color({ type = "linear", from = { 0, 20 }, to = { 0, 0 }, stops = { { 0, theme.fg_widget }, { 0.5, theme.fg_center_widget }, { 1, theme.fg_end_widget } }})
+-- membar:set_gradient_colors({ theme.fg_widget,
+--    theme.fg_center_widget, theme.fg_end_widget
 -- })
 -- Register widget
 vicious.register(membar, vicious.widgets.mem, "$1", 13)
 -- }}}
 
 -- {{{ File system usage
-fsicon = wibox.widget.imagebox(beautiful.widget_fs)
+fsicon = wibox.widget.imagebox(theme.widget_fs)
 -- Initialize widgets
 fs = {
   root = awful.widget.progressbar(), usr = awful.widget.progressbar(),
@@ -300,11 +320,11 @@ fs = {
 for _, w in pairs(fs) do
   w:set_vertical(true):set_ticks(true)
   w:set_height(18):set_width(5):set_ticks_size(2)
-  w:set_border_color(beautiful.border_widget)
-  w:set_background_color(beautiful.fg_off_widget)
-  w:set_color({ type = "linear", from = { 0, 0 }, to = { 0, 20 }, stops = { { 0, "#ff0000" }, { 0.5, "#00ff00" }, { 1, "#0000ff" } }})
-  -- w:set_gradient_colors({ beautiful.fg_widget,
-  --    beautiful.fg_center_widget, beautiful.fg_end_widget
+  w:set_border_color(theme.border_widget)
+  w:set_background_color(theme.fg_off_widget)
+  w:set_color({ type = "linear", from = { 0, 0 }, to = { 0, 20 }, stops = { { 0, theme.fg_widget }, { 0.5, theme.fg_center_widget }, { 1, theme.fg_end_widget } }})
+  -- w:set_gradient_colors({ theme.fg_widget,
+  --    theme.fg_center_widget, theme.fg_end_widget
   -- }) 
   -- Register buttons
   w:buttons(awful.util.table.join(
@@ -324,18 +344,18 @@ vicious.register(fs.home, vicious.widgets.fs, "${/home used_p}", 599)
 -- }}}
 
 -- {{{ Network usage
-dnicon = wibox.widget.imagebox(beautiful.widget_net)
-upicon = wibox.widget.imagebox(beautiful.widget_netup)
+dnicon = wibox.widget.imagebox(theme.widget_net)
+upicon = wibox.widget.imagebox(theme.widget_netup)
 -- Initialize widget
 netwidget = wibox.widget.textbox()
 -- Register widget
 vicious.register(netwidget, vicious.widgets.net, '<span color="'
-  .. beautiful.fg_netdn_widget ..'">${eth0 down_kb}</span> <span color="'
-  .. beautiful.fg_netup_widget ..'">${eth0 up_kb}</span>', 3)
+  .. theme.fg_netdn_widget ..'">${eth0 down_kb}</span> <span color="'
+  .. theme.fg_netup_widget ..'">${eth0 up_kb}</span>', 3)
 -- }}}
 
 -- {{{ Mail subject
-mailicon = wibox.widget.imagebox(beautiful.widget_mail)
+mailicon = wibox.widget.imagebox(theme.widget_mail)
 -- Initialize widget
 mailwidget = wibox.widget.textbox()
 -- Register widget
@@ -355,7 +375,7 @@ mailicon:buttons(mailwidget:buttons())
 
 -- {{{ Org-mode agenda
 -- orgicon = widget({ type = "imagebox" })
--- orgicon.image = image(beautiful.widget_org)
+-- orgicon.image = image(theme.widget_org)
 -- -- Initialize widget
 -- orgwidget = widget({ type = "textbox" })
 -- -- Configure widget
@@ -364,10 +384,10 @@ mailicon:buttons(mailwidget:buttons())
 --     home.."/.org/index.org", home.."/.org/personal.org",
 --   },
 --   color = {
---     past   = '<span color="'..beautiful.fg_urgent..'">',
---     today  = '<span color="'..beautiful.fg_normal..'">',
---     soon   = '<span color="'..beautiful.fg_widget..'">',
---     future = '<span color="'..beautiful.fg_netup_widget..'">'
+--     past   = '<span color="'..theme.fg_urgent..'">',
+--     today  = '<span color="'..theme.fg_normal..'">',
+--     soon   = '<span color="'..theme.fg_widget..'">',
+--     future = '<span color="'..theme.fg_netup_widget..'">'
 -- }} -- Register widget
 -- vicious.register(orgwidget, vicious.widgets.org,
 --   orgmode.color.past..'$1</span>-'..orgmode.color.today .. '$2</span>-' ..
@@ -381,17 +401,17 @@ mailicon:buttons(mailwidget:buttons())
 -- }}}
 
 -- {{{ Volume level
-volicon = wibox.widget.imagebox(beautiful.widget_vol)
+volicon = wibox.widget.imagebox(theme.widget_vol)
 -- Initialize widgets
 volbar    = awful.widget.progressbar()
 volwidget = wibox.widget.textbox()
 -- Progressbar properties
 volbar:set_vertical(true):set_ticks(true)
 volbar:set_height(12):set_width(8):set_ticks_size(2)
-volbar:set_background_color(beautiful.fg_off_widget)
-volbar:set_color({ type = "linear", from = { 0, 0 }, to = { 0, 20 }, stops = { { 0, "#ff0000" }, { 0.5, "#00ff00" }, { 1, "#0000ff" } }})
--- volbar:set_gradient_colors({ beautiful.fg_widget,
---    beautiful.fg_center_widget, beautiful.fg_end_widget
+volbar:set_background_color(theme.fg_off_widget)
+volbar:set_color({ type = "linear", from = { 0, 0 }, to = { 0, 20 }, stops = { { 0, theme.fg_widget }, { 0.5, theme.fg_center_widget }, { 1, theme.fg_end_widget } }})
+-- volbar:set_gradient_colors({ theme.fg_widget,
+--    theme.fg_center_widget, theme.fg_end_widget
 -- }) 
 -- Enable caching
 vicious.cache(vicious.widgets.volume)
@@ -408,7 +428,7 @@ volwidget:buttons(volbar:buttons())
 -- }}}
 
 -- {{{ Date and time
-dateicon = wibox.widget.imagebox(beautiful.widget_date)
+dateicon = wibox.widget.imagebox(theme.widget_date)
 -- Initialize widget
 datewidget = wibox.widget.textbox()
 -- Register widget
@@ -502,17 +522,18 @@ for s = 1, scount do
     -- Create CPU widgets
     cpulist = {}
     for scpu = cpucount, 1, -1 do
-        table.insert(cpulist, { tzswidgets[scpu], cpugraphs[scpu] and cpugraphs[scpu].widget or nil, cpuids[scpu], cpuicon, separator })
+        table.insert(cpulist, { separator, cpuicon, cpuids[scpu], cpugraphs[scpu], tzswidgets[scpu]})
     end
 
     -- Create the panel
-    panel[s] = awful.wibox({      screen = s,
-        fg = beautiful.fg_normal, height = (s == 1 and scount ~= 1 and 18 or 20),
-        bg = beautiful.bg_normal, position = "top",
-        border_color = beautiful.border_focus,
-        border_width = beautiful.border_width
+    panel[s] = awful.wibox({ screen = s,
+        fg = theme.fg_normal, height = (s == 1 and scount ~= 1 and 20 or 22),
+        bg = theme.bg_normal, position = "top",
+        border_color = theme.border_focus,
+        border_width = theme.border_width
     })
-
+    
+    ---------------------------------------
     -- Widgets that are aligned to the left
     local left_layout =  wibox.layout.fixed.horizontal()
     -- left_layout:add(launcher)
@@ -525,27 +546,33 @@ for s = 1, scount do
         left_layout = layout_list_add(left_layout, { launchbar[s], separator })
     end
 
+    ----------------------------------------
     -- Widgets that are aligned to the right
     local right_layout = wibox.layout.fixed.horizontal()
-    if s == 1 then
-        right_layout = layout_list_add(right_layout, { systray, separator })
-    end
-    right_layout = layout_list_add(right_layout, { datewidget, dateicon, separator })
+
     if s == 2 or scount == 1 then
+        for scpu = cpucount, 1, -1 do
+            right_layout = layout_list_add(right_layout, cpulist[scpu])
+        end
         right_layout = layout_list_add(right_layout,
-            { volwidget,  volbar.widget, volicon, separator,
-              -- separator, orgwidget,  orgicon,
-              -- mailwidget, mailicon, separator,
-              upicon,     netwidget, dnicon, separator,
-              -- fs.home.widget, fs.tmp.widget, fs.var.widget, fs.opt2.widget, separator,
-              -- fs.opt.widget, fs.usr.widget, fs.root.widget, fsicon, separator,
-              membar.widget, memicon, separator,
-              -- batwidget, baticon, separator,
+            { 
+              -- separator, baticon, batwidget, 
+              separator, memicon, membar, 
+              -- separator, fsicon, fs.opt, fs.home, fs.opt2,
+              -- separator, fs.root, fs.usr, fs.tmp, fs.var,
+              separator, dnicon, netwidget, upicon, 
+              -- separator, mailicon, mailwidget,
+              -- separator, orgicon, orgwidget,  
+              separator, volicon, volbar, volwidget,
               })
-    for scpu = cpucount, 1, -1 do
-        right_layout = layout_list_add(right_layout, cpulist[scpu])
     end
+    right_layout = layout_list_add(right_layout, { separator, dateicon, datewidget })
+    if s == 1 then
+        right_layout = layout_list_add(right_layout, { separator, systray })
     end
+
+    
+    --------------------------------------------------------------
     -- Now bring it all together (with the tasklist in the middle)
     local layout = wibox.layout.align.horizontal()
     layout:set_left(left_layout)
@@ -809,8 +836,8 @@ awful.rules.rules = {
     { rule = { }, properties = {
       focus = true,      size_hints_honor = false,
       keys = clientkeys, buttons = clientbuttons,
-      border_width = beautiful.border_width,
-      border_color = beautiful.border_normal }
+      border_width = theme.border_width,
+      border_color = theme.border_normal }
     },
     -- { rule = { class = "Iceweasel",  instance = "Navigator" },
     --   properties = { tag = mouse.screen][3] } },
@@ -829,6 +856,7 @@ awful.rules.rules = {
     -- { rule = { class = "Geeqie" },      properties = { floating = true } },
     -- { rule = { class = "ROX-Filer" },   properties = { floating = true } },
     -- { rule = { class = "Pinentry.*" },  properties = { floating = true } },
+    { rule = { class = "gimp" },  properties = { floating = true } },
 }
 -- }}}
 
@@ -867,8 +895,8 @@ end)
 -- }}}
 
 -- {{{ Focus signal handlers
-client.connect_signal("focus",   function (c) c.border_color = beautiful.border_focus  end)
-client.connect_signal("unfocus", function (c) c.border_color = beautiful.border_normal end)
+client.connect_signal("focus",   function (c) c.border_color = theme.border_focus  end)
+client.connect_signal("unfocus", function (c) c.border_color = theme.border_normal end)
 -- }}}
 
 -- {{{ Arrange signal handler
