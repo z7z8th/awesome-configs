@@ -19,21 +19,20 @@ theme.wallpaper_cmd = { "/usr/bin/nitrogen --restore" }
 theme.font      = "Droid Sans 8"
 
 -- {{{ Colors
-theme.fg_normal = "#DCDCCC"
--- theme.fg_focus  = "#F0DFAF"
-theme.fg_focus  = "#FFFFEE"
-theme.fg_urgent = "#CC9393"
-theme.bg_normal = "#3F3F3F"
--- theme.bg_focus  = "#1E2320"
-theme.bg_focus  = "#8895AB"
+theme.fg_normal = "#aaaaaa"
+theme.fg_focus  = "#FFFFFF"
+theme.fg_urgent = "#FFFFFF"
+
+theme.bg_normal = "#222222"
+theme.bg_focus  = "#535d6c"
 theme.bg_urgent = theme.bg_normal
 -- }}}
 
 -- {{{ Borders
 theme.border_width  = 1
-theme.border_focus  = "#6F6F6F"
-theme.border_normal = theme.bg_normal
-theme.border_marked = theme.fg_urgent
+theme.border_focus  = "#535d6c"
+theme.border_normal = "#000000"
+theme.border_marked = "#91231c"
 -- }}}
 
 -- {{{ Titlebars
@@ -69,6 +68,8 @@ theme.mouse_finder_color = theme.fg_urgent
 -- {{{ Menu
 -- theme.menu_[bg|fg]_[normal|focus]
 -- theme.menu_[height|width|border_color|border_width]
+theme.menu_height = 15
+theme.menu_width  = 100
 -- }}}
 -- }}}
 
