@@ -90,6 +90,8 @@ local theme = beautiful.get()
 -- mydump("beautiful: ", beautiful)
 -- mydump("beautiful.get: ", beautiful.get())
 
+awesome.font = theme.font
+
 -- This is used later as the default terminal and editor to run.
 terminal = "x-terminal-emulator"
 term_run = terminal .. " -e "
@@ -174,7 +176,7 @@ mainmenu = awful.menu({ items = { { "awesome", awesomemenu, theme.awesome_icon }
 --                                    { "Debian", debian.menu.Debian_menu.Debian },
                                     { "open terminal", terminal }
                                   },
-                        theme = { width = 300, height = 30 }
+                        theme = { width = theme.menu_width, height = theme.menu_height }
                         })
 
 launcher = awful.widget.launcher({ image = theme.awesome_icon,
@@ -271,9 +273,10 @@ for s = 1, cpucount do
     cpuids[s] = wibox.widget.textbox(tostring(s))
     -- cpuids[s].text = tostring(s) 
     -- Graph properties
-    cpugraphs[s]:set_width(40)
+    local graph_width = 40
+    cpugraphs[s]:set_width(graph_width)
     cpugraphs[s]:set_background_color(theme.fg_off_widget)
-    cpugraphs[s]:set_color({ type = "linear", from = { 40, 0 }, to = { 0, 0 }, stops = { { 0, theme.fg_end_widget }, { 0.5, theme.fg_center_widget }, { 1, theme.fg_widget } }})
+    cpugraphs[s]:set_color({ type = "linear", from = { 0, theme.panel_height }, to = { 0, theme.panel_height/2 }, stops = { { 0, theme.fg_widget }, { 0.5, theme.fg_center_widget }, { 1, theme.fg_end_widget } }})
     -- cpugraphs[s]:set_gradient_angle(0):set_gradient_colors({
     -- theme.fg_end_widget, theme.fg_center_widget, theme.fg_widget
     -- })
@@ -299,7 +302,7 @@ membar = awful.widget.progressbar()
 membar:set_vertical(true):set_ticks(true)
 membar:set_width(8):set_ticks_size(2)
 membar:set_background_color(theme.fg_off_widget)
-membar:set_color({ type = "linear", from = { 0, 20 }, to = { 0, 0 }, stops = { { 0, theme.fg_widget }, { 0.5, theme.fg_center_widget }, { 1, theme.fg_end_widget } }})
+membar:set_color({ type = "linear", from = { 0, theme.panel_height }, to = { 0, 0 }, stops = { { 0, theme.fg_widget }, { 0.5, theme.fg_center_widget }, { 1, theme.fg_end_widget } }})
 -- membar:set_gradient_colors({ theme.fg_widget,
 --    theme.fg_center_widget, theme.fg_end_widget
 -- })
@@ -319,10 +322,10 @@ fs = {
 -- Progressbar properties
 for _, w in pairs(fs) do
   w:set_vertical(true):set_ticks(true)
-  w:set_height(18):set_width(5):set_ticks_size(2)
+  w:set_width(5):set_ticks_size(2)
   w:set_border_color(theme.border_widget)
   w:set_background_color(theme.fg_off_widget)
-  w:set_color({ type = "linear", from = { 0, 0 }, to = { 0, 20 }, stops = { { 0, theme.fg_widget }, { 0.5, theme.fg_center_widget }, { 1, theme.fg_end_widget } }})
+  w:set_color({ type = "linear", from = { 0, theme.panel_height }, to = { 0, 0 }, stops = { { 0, theme.fg_widget }, { 0.5, theme.fg_center_widget }, { 1, theme.fg_end_widget } }})
   -- w:set_gradient_colors({ theme.fg_widget,
   --    theme.fg_center_widget, theme.fg_end_widget
   -- }) 
@@ -407,9 +410,9 @@ volbar    = awful.widget.progressbar()
 volwidget = wibox.widget.textbox()
 -- Progressbar properties
 volbar:set_vertical(true):set_ticks(true)
-volbar:set_height(12):set_width(8):set_ticks_size(2)
+volbar:set_width(8):set_ticks_size(2)
 volbar:set_background_color(theme.fg_off_widget)
-volbar:set_color({ type = "linear", from = { 0, 0 }, to = { 0, 20 }, stops = { { 0, theme.fg_widget }, { 0.5, theme.fg_center_widget }, { 1, theme.fg_end_widget } }})
+volbar:set_color({ type = "linear", from = { 0, theme.panel_height }, to = { 0, 0 }, stops = { { 0, theme.fg_widget }, { 0.5, theme.fg_center_widget }, { 1, theme.fg_end_widget } }})
 -- volbar:set_gradient_colors({ theme.fg_widget,
 --    theme.fg_center_widget, theme.fg_end_widget
 -- }) 
@@ -527,7 +530,7 @@ for s = 1, scount do
 
     -- Create the panel
     panel[s] = awful.wibox({ screen = s,
-        fg = theme.fg_normal, height = (s == 1 and scount ~= 1 and 20 or 22),
+        fg = theme.fg_normal, height = (s == 1 and scount ~= 1 and theme.panel_height or theme.panel_height_large),
         bg = theme.bg_normal, position = "top",
         border_color = theme.border_focus,
         border_width = theme.border_width
@@ -549,6 +552,10 @@ for s = 1, scount do
     ----------------------------------------
     -- Widgets that are aligned to the right
     local right_layout = wibox.layout.fixed.horizontal()
+    -- local rotate_layout = wibox.layout.rotate()
+    -- rotate_layout:set_direction("west")
+    -- rotate_layout:set_widget(cpugraphs[1])
+    -- right_layout:add(rotate_layout)
 
     if s == 2 or scount == 1 then
         for scpu = cpucount, 1, -1 do
@@ -744,7 +751,7 @@ globalkeys = awful.util.table.join(
     end),
     awful.key({ altkey }, "Escape", function ()
         awful.menu.menu_keys.down = { "Down", "Alt_L" }
-        local cmenu = awful.menu.clients({width=230}, { keygrabber=true, coords={x=525, y=330} })
+        local cmenu = awful.menu.clients({theme.client_menu_width}, { keygrabber=true, coords=theme.client_menu_coord })
     end),
     awful.key({ modkey, "Shift" }, "j", function () awful.client.swap.byidx(1)  end),
     awful.key({ modkey, "Shift" }, "k", function () awful.client.swap.byidx(-1) end)
