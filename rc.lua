@@ -918,4 +918,4 @@ end
 
 -- http://awesome.naquadah.org/wiki/Autostart
 -- auto start with dex: https://github.com/jceb/dex
--- awful.util.spawn_with_shell("$HOME/bin/dex -a -e Awesome")
+awful.util.spawn_with_shell("$HOME/bin/dex -a -e Awesome")
