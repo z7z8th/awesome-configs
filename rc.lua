@@ -407,7 +407,7 @@ mailicon:buttons(mailwidget:buttons())
 volicon = wibox.widget.imagebox(theme.widget_vol)
 -- Initialize widgets
 volbar    = awful.widget.progressbar()
-volwidget = wibox.widget.textbox()
+-- volwidget = wibox.widget.textbox()
 -- Progressbar properties
 volbar:set_vertical(true):set_ticks(true)
 volbar:set_width(8):set_ticks_size(2)
@@ -420,14 +420,17 @@ volbar:set_color({ type = "linear", from = { 0, theme.panel_height }, to = { 0, 
 vicious.cache(vicious.widgets.volume)
 -- Register widgets
 vicious.register(volbar,    vicious.widgets.volume,  "$1",  2, "Master")
-vicious.register(volwidget, vicious.widgets.volume, " $1%", 2, "Master")
+-- vicious.register(volwidget, vicious.widgets.volume, " $1%", 2, "Master")
 -- Register buttons
-volbar:buttons(awful.util.table.join(
+volbuttons = awful.util.table.join(
    awful.button({ }, 1, function () exec(term_run .. "alsamixer") end),
-   awful.button({ }, 4, function () exec("amixer -q set Master 2dB+", false) end),
-   awful.button({ }, 5, function () exec("amixer -q set Master 2dB-", false) end)
-)) -- Register assigned buttons
-volwidget:buttons(volbar:buttons())
+   awful.button({ }, 4, function () exec("amixer -c 0 -q set Master 2dB+", false) end),
+   awful.button({ }, 5, function () exec("amixer -c 0 -q set Master 2dB-", false) end)
+)
+volicon:buttons(volbuttons)
+volbar:buttons(volbuttons)
+-- Register assigned buttons
+-- volwidget:buttons(volbar:buttons())
 -- }}}
 
 -- {{{ Date and time
@@ -437,9 +440,11 @@ datewidget = wibox.widget.textbox()
 -- Register widget
 vicious.register(datewidget, vicious.widgets.date, "%a %d/%m %R", 61)
 -- Register buttons
-datewidget:buttons(awful.util.table.join(
+datebuttons = awful.util.table.join(
   awful.button({ }, 1, function () exec(term_run .. "sh -c 'cal -3 && cat'") end)
-))
+)
+dateicon:buttons(datebuttons)
+datewidget:buttons(datebuttons)
 -- }}}
 
 -- {{{ System tray
@@ -570,7 +575,7 @@ for s = 1, scount do
               separator, dnicon, netwidget, upicon, 
               -- separator, mailicon, mailwidget,
               -- separator, orgicon, orgwidget,  
-              separator, volicon, volbar, volwidget,
+              separator, volicon, volbar, -- volwidget,
               })
     end
     right_layout = layout_list_add(right_layout, { separator, dateicon, datewidget })
