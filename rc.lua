@@ -206,35 +206,36 @@ function getValue(t, key)
  end
  
 launchbar = {}
- filedir = home.."/Desktop/" -- Specify your folder with shortcuts here
- local items = {}
- local files = io.popen("ls " .. filedir .. "*.desktop")
- for f in files:lines() do
+filedir = home.."/Desktop/" -- Specify your folder with shortcuts here
+local items = {}
+local files = io.popen("ls " .. filedir .. "*.desktop")
+for f in files:lines() do
     print( "@@ QuickLaunch: "..f)
     local t = io.open(f):read("*all")
     print("Exec="..getValue(t, "Exec"))
     print("Name="..getValue(t, "Name"))
-    table.insert(items, { image = find_icon(getValue(t,"Icon"), 
-					    { "/usr/share/pixmaps", 
-					      "/usr/share/icons/hicolor/",
-					      home .. "/.local/share/icons/hicolor/32x32/apps/",
-					      home .. "/.local/share/icons/hicolor/",
-					      home .. "/.local/share/icons/"}),
-			  command = getValue(t,"Exec"),
-			  tooltip = getValue(t,"Name"),
-			  position = tonumber(getValue(t,"Position")) or 255 })
- end
- table.sort(items, function(a,b) return a.position < b.position end)
- for i = 1, table.getn(items) do
+    table.insert(items, 
+                 { image = find_icon(getValue(t,"Icon"), 
+                                     { "/usr/share/pixmaps", 
+                                       "/usr/share/icons/hicolor/",
+                                       home .. "/.local/share/icons/hicolor/32x32/apps/",
+                                       home .. "/.local/share/icons/hicolor/",
+                                       home .. "/.local/share/icons/" } ),
+                   command = getValue(t,"Exec"),
+                   tooltip = getValue(t,"Name"),
+                   position = tonumber(getValue(t,"Position")) or 255 })
+end
+table.sort(items, function(a,b) return a.position < b.position end)
+for i = 1, table.getn(items) do
     print("@@ Got Items:", i)
     --     local txt = launchbar[i].tooltip
     launchbar[i] = awful.widget.launcher(items[i])
     --     local tt = awful.tooltip ({ objects = { launchbar[i] } })
     --     tt:set_text (txt)
     --     tt:set_timeout (0)
- end
- 
- -- Quick launch bar widget ENDS
+end
+
+-- Quick launch bar widget ENDS
 
 -- }}}
 
@@ -489,7 +490,7 @@ tasklist.buttons = awful.util.table.join(
 -- {{{ Wibox initialisation
 function layout_list_add(l, wlist)
     for _,w in ipairs(wlist) do
-        print(">layout add: ", w, ", ", type(w))
+        -- print(">layout add: ", w, ", ", type(w))
         if w then
             l:add(w)
         end
@@ -551,7 +552,7 @@ for s = 1, scount do
                                    separator,
                                    promptbox[s] })
     if s == 1 then
-        left_layout = layout_list_add(left_layout, { launchbar[s], separator })
+        left_layout = layout_list_add(left_layout, launchbar)
     end
 
     ----------------------------------------
