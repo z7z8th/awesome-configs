@@ -500,8 +500,8 @@ tasklist.buttons = awful.util.table.join(
 
 -- {{{ Wibox initialisation
 function layout_list_add(l, wlist)
-    for _,w in ipairs(wlist) do
-        -- print(">layout add: ", w, ", ", type(w))
+    for _,w in pairs(wlist) do
+        print(">layout add: ", w, ", ", type(w))
         if w then
             l:add(w)
         end
@@ -542,7 +542,7 @@ for s = 1, scount do
     -- Create CPU widgets
     cpulist = {}
     for scpu = cpucount, 1, -1 do
-        table.insert(cpulist, { separator, cpuicon, cpuids[scpu], cpugraphs[scpu], tzswidgets[scpu]})
+        table.insert(cpulist, { separator, scpu == 1 and cpuicon or nil, cpuids[scpu], cpugraphs[scpu], tzswidgets[scpu]})
     end
 
     -- Create the panel
@@ -942,4 +942,4 @@ end
 
 -- http://awesome.naquadah.org/wiki/Autostart
 -- auto start with dex: https://github.com/jceb/dex
-awful.util.spawn_with_shell("$HOME/bin/dex -a -e Awesome")
+-- awful.util.spawn_with_shell("$HOME/bin/dex -a -e Awesome")
