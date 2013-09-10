@@ -94,6 +94,7 @@ theme.taglist_squares_unsel = theme.confdir .. "/taglist/squarez.png"
 theme.awesome_icon           = theme.confdir .. "/awesome-icon.png"
 theme.menu_submenu_icon      = default_theme_dir .. "submenu.png"
 theme.tasklist_floating_icon = default_theme_dir .. "tasklist/floatingw.png"
+theme.warn_icon              = theme.confdir .. "/icons/warn.png"
 -- }}}
 
 -- {{{ Layout icons
