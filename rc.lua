@@ -184,16 +184,15 @@ launcher = awful.widget.launcher({ image = theme.awesome_icon,
 -- }}}
 
 -- {{{ quick launch bar, REF: http://awesome.naquadah.org/wiki/Quick_launch_bar
-local icon_exts = { "png", "xpm", "svg" }
- 
- -- Quick launch bar widget BEGINS
-function find_icon(icon_name, icon_dirs)
-   if string.sub(icon_name, 1, 1) == '/' then
-      if awful.util.file_readable(icon_name) then
-          return icon_name
-       else
-          return nil
-       end
+function find_icon(icon_name, icon_exts, icon_dirs)
+    print("find icon: ", icon_name)
+    if not icon_name then return nil end
+    if string.sub(icon_name, 1, 1) == '/' then
+        if awful.util.file_readable(icon_name) then
+            return icon_name
+        else
+            return nil
+        end
     end
     local icon_path = awful.util.geticonpath(icon_name, icon_exts, icon_dirs);
     print(icon_name .. " <=> " .. (icon_path or ""))
@@ -201,42 +200,54 @@ function find_icon(icon_name, icon_dirs)
  end
  
 function getValue(t, key)
-   _, _, res = string.find(t, key .. " *= *([^%c]+)%c")
+    _, _, res = string.find(t, key .. " *= *([^%c]+) *%c?")
     return res
- end
+end
  
-launchbar = {}
-filedir = home.."/Desktop/" -- Specify your folder with shortcuts here
-local items = {}
-local files = io.popen("ls " .. filedir .. "*.desktop")
-for f in files:lines() do
-    print( "@@ QuickLaunch: "..f)
-    local t = io.open(f):read("*all")
-    print("Exec="..getValue(t, "Exec"))
-    print("Name="..getValue(t, "Name"))
-    table.insert(items, 
-                 { image = find_icon(getValue(t,"Icon"), 
-                                     { "/usr/share/pixmaps", 
-                                       "/usr/share/icons/hicolor/",
-                                       home .. "/.local/share/icons/hicolor/32x32/apps/",
-                                       home .. "/.local/share/icons/hicolor/",
-                                       home .. "/.local/share/icons/" } ),
-                   command = getValue(t,"Exec"),
-                   tooltip = getValue(t,"Name"),
-                   position = tonumber(getValue(t,"Position")) or 255 })
-end
-table.sort(items, function(a,b) return a.position < b.position end)
-for i = 1, table.getn(items) do
-    print("@@ Got Items:", i)
-    --     local txt = launchbar[i].tooltip
-    launchbar[i] = awful.widget.launcher(items[i])
-    --     local tt = awful.tooltip ({ objects = { launchbar[i] } })
-    --     tt:set_text (txt)
-    --     tt:set_timeout (0)
+function get_desktop_items()
+    local icon_exts = { "png", "xpm", "svg" }
+    local icon_dirs = { "/usr/share/pixmaps", 
+                        "/usr/share/icons/hicolor/",
+                        home .. "/.local/share/icons/hicolor/32x32/apps/",
+                        home .. "/.local/share/icons/hicolor/",
+                        home .. "/.local/share/icons/" }
+
+    local filedir = home.."/Desktop/" -- Specify your folder with shortcuts here
+
+    local items = {}
+    local files = io.popen("ls " .. filedir .. "*.desktop")
+
+    for f in files:lines() do
+        print( "\n@@ QuickLaunch: "..f)
+        local t = io.open(f):read("*all")
+        print("Name="..getValue(t, "Name"))
+        print("Exec="..getValue(t, "Exec"))
+        local icon = find_icon(getValue(t,"Icon"), icon_exts, icon_dirs) or theme.warn_icon
+        print("Icon="..icon)
+        table.insert(items, 
+                     { image = icon,
+                       command = getValue(t,"Exec"),
+                       tooltip = getValue(t,"Name"),
+                       position = tonumber(getValue(t,"Position")) or 255 })
+    end
+
+    table.sort(items, function(a,b) return a.position < b.position end)
+    return items
 end
 
--- Quick launch bar widget ENDS
-
+local launchbar = {}
+local desktop_items = get_desktop_items()
+for i,v in ipairs(desktop_items) do
+    -- local txt = launchbar[i].tooltip
+    launchbar[i] = awful.widget.launcher(v)
+    local tt = awful.tooltip ({ objects = { launchbar[i] }, 
+                                timer_function = function()
+                                    return v.tooltip
+                                end
+                             })
+    -- tt:set_text(txt)
+    tt:set_timeout(0)
+end
 -- }}}
 
 -- {{{ Wibox
@@ -435,7 +446,7 @@ volbar:buttons(volbuttons)
 -- }}}
 
 -- {{{ Date and time
-dateicon = wibox.widget.imagebox(theme.widget_date)
+-- dateicon = wibox.widget.imagebox(theme.widget_date)
 -- Initialize widget
 datewidget = wibox.widget.textbox()
 -- Register widget
@@ -444,7 +455,7 @@ vicious.register(datewidget, vicious.widgets.date, "%a %d/%m %R", 61)
 datebuttons = awful.util.table.join(
   awful.button({ }, 1, function () exec(term_run .. "sh -c 'cal -3 && cat'") end)
 )
-dateicon:buttons(datebuttons)
+-- dateicon:buttons(datebuttons)
 datewidget:buttons(datebuttons)
 -- }}}
 
@@ -579,7 +590,7 @@ for s = 1, scount do
               separator, volicon, volbar, -- volwidget,
               })
     end
-    right_layout = layout_list_add(right_layout, { separator, dateicon, datewidget })
+    right_layout = layout_list_add(right_layout, { separator, datewidget })
     if s == 1 then
         right_layout = layout_list_add(right_layout, { separator, systray })
     end
