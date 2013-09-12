@@ -561,10 +561,11 @@ for s = 1, scount do
                                    taglist[s],
                                    layoutbox[s],
                                    separator,
-                                   promptbox[s] })
+                                   promptbox[s], })
     if s == 1 then
         left_layout = layout_list_add(left_layout, launchbar)
     end
+    left_layout:add(separator)
 
     ----------------------------------------
     -- Widgets that are aligned to the right
@@ -801,7 +802,12 @@ clientkeys = awful.util.table.join(
     awful.key({ modkey, "Shift" }, "s", function (c) exec("kill -STOP " .. c.pid) end),
     awful.key({ modkey, "Shift" }, "t", function (c)
         if   c.titlebar then awful.titlebar.remove(c)
-        else awful.titlebar.add(c, { modkey = modkey }) end
+        else
+            local ttbar = awful.titlebar(c, { modkey = modkey })
+            local title = awful.titlebar.widget.titlewidget(c)
+            title:set_text(c.name)
+            ttbar:set_widget(title)
+        end
     end),
     awful.key({ modkey, "Shift" }, "f", function (c) if awful.client.floating.get(c)
         then awful.client.floating.delete(c);    awful.titlebar.remove(c)
@@ -863,8 +869,12 @@ awful.rules.rules = {
       border_width = theme.border_width,
       border_color = theme.border_normal }
     },
-    -- { rule = { class = "Iceweasel",  instance = "Navigator" },
-    --   properties = { tag = mouse.screen][3] } },
+    { rule = { class = "Firefox" },
+      properties = { tag = tags[mouse.screen][3], switchtotag = true } },
+    { rule = { class = "Thunderbird" },
+      properties = { tag = tags[mouse.screen][4], switchtotag = true } },
+    { rule = { class = "Skype" },
+      properties = { tag = tags[mouse.screen][4], floating = true } },
     -- { rule = { class = "Emacs",    instance = "emacs" },
     --   properties = { tag = tags[1][2] } },
     -- { rule = { class = "Emacs",    instance = "_Remember_" },
@@ -891,7 +901,7 @@ awful.rules.rules = {
 client.connect_signal("manage", function (c, startup)
     -- Add titlebar to floaters, but remove those from rule callback
     if awful.client.floating.get(c)
-    or awful.layout.get(c.screen) == awful.layout.suit.floating then
+        or awful.layout.get(c.screen) == awful.layout.suit.floating then
         if   c.titlebar then awful.titlebar.remove(c)
         end
         -- else awful.titlebar.add(c, {modkey = modkey}) end
