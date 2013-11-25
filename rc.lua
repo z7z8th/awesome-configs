@@ -122,7 +122,7 @@ tags = {
   -- layout = { layouts[6], layouts[6], layouts[6], layouts[6], layouts[6],
   --            layouts[6], layouts[6], layouts[6], layouts[6]
   names  = { "term ", "log ", "web ", "ref ", "cod" },
-  layout = { layouts[1], layouts[1], layouts[4], layouts[1], layouts[4]
+  layout = { layouts[1], layouts[1], layouts[4], layouts[4], layouts[4]
 }}
 
 for s = 1, scount do
@@ -278,6 +278,7 @@ cpuids = {}
 cpugraphs = {}
 tzswidgets = {}
 if cpucount >= 4 then cpucount = cpucount / 2 end
+cpucount = 1
 for s = 1, cpucount do
     -- Initialize widgets
     cpugraphs[s]  = awful.widget.graph()
@@ -293,8 +294,8 @@ for s = 1, cpucount do
     -- theme.fg_end_widget, theme.fg_center_widget, theme.fg_widget
     -- })
     -- Register widgets
-    vicious.register(cpugraphs[s],  vicious.widgets.cpu,     "$" .. (s+"1"))
-    vicious.register(tzswidgets[s], vicious.widgets.thermal, "$1C", 19, "thermal_zone" .. (s-"1"))
+    vicious.register(cpugraphs[s],  vicious.widgets.cpu,     "$" .. (s))
+    vicious.register(tzswidgets[s], vicious.widgets.thermal, "$1C", 19, "thermal_zone" .. (s-1))
 end
 -- }}}
 
