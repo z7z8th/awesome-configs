@@ -277,24 +277,24 @@ cpucount = get_cpucount()
 cpuids = {}
 cpugraphs = {}
 tzswidgets = {}
+-- Enable cache, must be enabled for multiple cpu
+vicious.cache(vicious.widgets.cpu)
+-- Register cpu
 if cpucount >= 4 then cpucount = cpucount / 2 end
-cpucount = 1
+-- cpucount = 3
 for s = 1, cpucount do
     -- Initialize widgets
     cpugraphs[s]  = awful.widget.graph()
     tzswidgets[s] = wibox.widget.textbox()
     cpuids[s] = wibox.widget.textbox(tostring(s))
-    -- cpuids[s].text = tostring(s) 
+
     -- Graph properties
     local graph_width = 40
     cpugraphs[s]:set_width(graph_width)
     cpugraphs[s]:set_background_color(theme.fg_off_widget)
     cpugraphs[s]:set_color({ type = "linear", from = { 0, theme.panel_height }, to = { 0, theme.panel_height/2 }, stops = { { 0, theme.fg_widget }, { 0.5, theme.fg_center_widget }, { 1, theme.fg_end_widget } }})
-    -- cpugraphs[s]:set_gradient_angle(0):set_gradient_colors({
-    -- theme.fg_end_widget, theme.fg_center_widget, theme.fg_widget
-    -- })
     -- Register widgets
-    vicious.register(cpugraphs[s],  vicious.widgets.cpu,     "$" .. (s))
+    vicious.register(cpugraphs[s],  vicious.widgets.cpu,     "$" .. (s+1))
     vicious.register(tzswidgets[s], vicious.widgets.thermal, "$1C", 19, "thermal_zone" .. (s-1))
 end
 -- }}}
@@ -349,13 +349,13 @@ for _, w in pairs(fs) do
 end -- Enable caching
 vicious.cache(vicious.widgets.fs)
 -- Register widgets
-vicious.register(fs.root, vicious.widgets.fs, "${/ used_p}", 599)
-vicious.register(fs.usr, vicious.widgets.fs, "${/usr used_p}",     599)
-vicious.register(fs.opt, vicious.widgets.fs, "${/opt used_p}",     599)
-vicious.register(fs.opt2, vicious.widgets.fs, "${/opt2 used_p}",     599)
-vicious.register(fs.var, vicious.widgets.fs, "${/var used_p}",     599)
-vicious.register(fs.tmp, vicious.widgets.fs, "${/tmp used_p}",     599)
-vicious.register(fs.home, vicious.widgets.fs, "${/home used_p}", 599)
+-- vicious.register(fs.root, vicious.widgets.fs, "${/ used_p}", 599)
+-- vicious.register(fs.usr, vicious.widgets.fs, "${/usr used_p}",     599)
+-- vicious.register(fs.opt, vicious.widgets.fs, "${/opt used_p}",     599)
+-- vicious.register(fs.opt2, vicious.widgets.fs, "${/opt2 used_p}",     599)
+-- vicious.register(fs.var, vicious.widgets.fs, "${/var used_p}",     599)
+-- vicious.register(fs.tmp, vicious.widgets.fs, "${/tmp used_p}",     599)
+-- vicious.register(fs.home, vicious.widgets.fs, "${/home used_p}", 599)
 -- vicious.register(fs.s, vicious.widgets.fs, "${/mnt/storage used_p}", 599)
 -- }}}
 
@@ -364,6 +364,8 @@ dnicon = wibox.widget.imagebox(theme.widget_net)
 upicon = wibox.widget.imagebox(theme.widget_netup)
 -- Initialize widget
 netwidget = wibox.widget.textbox()
+-- Enable caching
+vicious.cache(vicious.widgets.net)
 -- Register widget
 vicious.register(netwidget, vicious.widgets.net, '<span color="'
   .. theme.fg_netdn_widget ..'">${eth0 down_kb}</span> <span color="'
@@ -376,11 +378,11 @@ mailicon = wibox.widget.imagebox(theme.widget_mail)
 mailwidget = wibox.widget.textbox()
 -- Register widget
 maildir = home .. "/Mail"
-vicious.register(mailwidget, vicious.widgets.mdir, "$1", 181, 
-    { maildir .. "/Inbox/",
-      maildir .. "/mantis/", 
-      maildir .. "/gerrit/", 
-      maildir .. "/from-gmail/"})
+-- vicious.register(mailwidget, vicious.widgets.mdir, "$1", 181, 
+--     { maildir .. "/Inbox/",
+--       maildir .. "/mantis/", 
+--       maildir .. "/gerrit/", 
+--       maildir .. "/from-gmail/"})
 -- Register buttons
 mailwidget:buttons(awful.util.table.join(
   -- awful.button({ }, 1, function () exec("urxvt -T Alpine -e alpine.exp") end)
@@ -542,8 +544,8 @@ for s = 1, scount do
 
     -- Create CPU widgets
     cpulist = {}
-    for scpu = cpucount, 1, -1 do
-        table.insert(cpulist, { separator, scpu == 1 and cpuicon or nil, cpuids[scpu], cpugraphs[scpu], tzswidgets[scpu]})
+    for i = 1, cpucount do
+        cpulist[i] = { separator, i == 1 and cpuicon or nil, cpuids[i], cpugraphs[i], tzswidgets[i] }
     end
 
     -- Create the panel
@@ -577,8 +579,9 @@ for s = 1, scount do
     -- right_layout:add(rotate_layout)
 
     if s == 2 or scount == 1 then
-        for scpu = cpucount, 1, -1 do
-            right_layout = layout_list_add(right_layout, cpulist[scpu])
+        for i = 1, cpucount do
+            right_layout = layout_list_add(right_layout, cpulist[i])
+            -- right_layout:add(cpugraphs[i])
         end
         right_layout = layout_list_add(right_layout,
             { 
