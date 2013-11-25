@@ -208,6 +208,7 @@ function get_desktop_items()
     local icon_exts = { "png", "xpm", "svg" }
     local icon_dirs = { "/usr/share/pixmaps", 
                         "/usr/share/icons/hicolor/",
+                        "/usr/share/icons/hicolor/32x32/apps/",
                         home .. "/.local/share/icons/hicolor/32x32/apps/",
                         home .. "/.local/share/icons/hicolor/",
                         home .. "/.local/share/icons/" }
