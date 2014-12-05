@@ -113,7 +113,7 @@ tags = {
   -- names  = { 1, 2, 3, 4, 5, 6, 7, 8, 9 },
   -- layout = { layouts[6], layouts[6], layouts[6], layouts[6], layouts[6],
   --            layouts[6], layouts[6], layouts[6], layouts[6]
-  names  = { " term ", " log ", " web ", " off ", " code " },
+  names  = { " ccccode ", " log ", " web ", " off ", " tttm " },
   layout = { layouts[4], layouts[4], layouts[4], layouts[4], layouts[4]
 }}
 
@@ -236,15 +236,18 @@ separator = wibox.widget.imagebox(theme.widget_sep)
 ctext = wibox.widget.textbox()
 cgraph = awful.widget.graph()
 cgraph:set_width(60)
-cgraph:set_stack(true):set_max_value(100)
+-- cgraph:set_stack(true)
+cgraph:set_max_value(100)
 cgraph:set_background_color("#494B4F")
 cgraph:set_stack_colors({ "#FF5656", "#88A175" })
+vicious.cache(vicious.widgets.cpu)
 vicious.register(ctext, vicious.widgets.cpu,
                    function (widget, args)
-                       cgraph:add_value(args[2], 1) -- Core 1, color 1
-                       cgraph:add_value(args[3], 2) -- Core 2, color 2
+                       cgraph:add_value(args[1], 1) -- Core 1, color 1
+                       -- cgraph:add_value(args[3], 2) -- Core 2, color 2
                        return ""
-                   end, 1)
+                   end,
+                   1)
 -- }}}
 
 -- {{{ Battery state
@@ -252,7 +255,7 @@ baticon = wibox.widget.imagebox(theme.widget_bat)
 -- Initialize widget
 batwidget = wibox.widget.textbox()
 -- Register widget
-vicious.register(batwidget, vicious.widgets.bat, "$1$2%", 61, "BAT0")
+-- vicious.register(batwidget, vicious.widgets.bat, "$1$2%", 61, "BAT0")
 -- }}}
 
 -- {{{ Memory usage
@@ -268,6 +271,7 @@ membar:set_color({ type = "linear", from = { 0, theme.panel_height }, to = { 0, 
 --    theme.fg_center_widget, theme.fg_end_widget
 -- })
 -- Register widget
+vicious.cache(vicious.widgets.mem)
 vicious.register(membar, vicious.widgets.mem, "$1", 13)
 -- }}}
 
@@ -295,7 +299,7 @@ for _, w in pairs(fs) do
     awful.button({ }, 1, function () run(term_run .. "'watch -n1 df -h'", false) end)
   ))
 end -- Enable caching
-vicious.cache(vicious.widgets.fs)
+-- vicious.cache(vicious.widgets.fs)
 -- Register widgets
 -- vicious.register(fs.root, vicious.widgets.fs, "${/ used_p}", 599)
 -- vicious.register(fs.usr, vicious.widgets.fs, "${/usr used_p}",     599)
@@ -316,8 +320,8 @@ netwidget = wibox.widget.textbox()
 vicious.cache(vicious.widgets.net)
 -- Register widget
 vicious.register(netwidget, vicious.widgets.net, '<span color="'
-  .. theme.fg_netdn_widget ..'">${eth0 down_kb}</span> <span color="'
-  .. theme.fg_netup_widget ..'">${eth0 up_kb}</span>', 3)
+  .. theme.fg_netdn_widget ..'">${eth1 down_kb}</span> <span color="'
+  .. theme.fg_netup_widget ..'">${eth1 up_kb}</span>', 3)
 -- }}}
 
 -- {{{ Mail subject
@@ -401,6 +405,7 @@ volbar:buttons(volbuttons)
 -- Initialize widget
 datewidget = wibox.widget.textbox()
 -- Register widget
+vicious.cache(vicious.widgets.date)
 vicious.register(datewidget, vicious.widgets.date, "%a %d/%m %R", 61)
 -- Register buttons
 datebuttons = awful.util.table.join(
@@ -484,10 +489,10 @@ for s = 1, scount do
     -- Create a layoutbox
     layoutbox[s] = awful.widget.layoutbox(s)
     layoutbox[s]:buttons(awful.util.table.join(
-        awful.button({ }, 1, function () awful.layout.inc(layouts,  1) end),
-        awful.button({ }, 3, function () awful.layout.inc(layouts, -1) end),
-        awful.button({ }, 4, function () awful.layout.inc(layouts,  1) end),
-        awful.button({ }, 5, function () awful.layout.inc(layouts, -1) end)
+        awful.button({ }, 1, function () awful.layout.inc(1) end),
+        awful.button({ }, 3, function () awful.layout.inc(-1) end),
+        awful.button({ }, 4, function () awful.layout.inc(1) end),
+        awful.button({ }, 5, function () awful.layout.inc(-1) end)
     ))
 
     -- Create the taglist
@@ -561,7 +566,7 @@ end
 
 -- {{{ Mouse bindings
 root.buttons(awful.util.table.join(
-    awful.button({ }, 3, function () mymainmenu:toggle() end),
+    awful.button({ }, 3, function () mainmenu:toggle() end),
     awful.button({ }, 4, awful.tag.viewnext),
     awful.button({ }, 5, awful.tag.viewprev)
 ))
@@ -570,7 +575,7 @@ root.buttons(awful.util.table.join(
 
 -- {{{ Key bindings
 --
--- @order: true to focus next, false to focus previous
+-- @order: false to focus next, true to focus previous
 local function focus_curtag_next(order)
    -- print("*****************")
    -- cf = client.focus
@@ -701,10 +706,10 @@ globalkeys = awful.util.table.join(
         if client.focus then client.focus:raise() end
     end),
     awful.key({ altkey }, "Tab", function ()
-        focus_curtag_next(true)
+        focus_curtag_next(false)
     end),
     awful.key({ altkey, "Shift" }, "Tab", function ()
-        focus_curtag_next(false)
+        focus_curtag_next(true)
     end),
     awful.key({ altkey }, "Escape", function ()
         awful.menu.menu_keys.down = { "Down", "Alt_L" }
@@ -832,8 +837,8 @@ awful.rules.rules = {
       properties = { tag = tags[mouse.screen][3], switchtotag = true } },
     { rule = { instance = "Mail" },
       properties = { tag = tags[mouse.screen][4], switchtotag = true } },
-    { rule = { class = "Evince" },
-      properties = { tag = tags[mouse.screen][4], switchtotag = true } },
+    -- { rule = { class = "Evince" },
+    --   properties = { tag = tags[mouse.screen][4], switchtotag = true } },
     { rule = { class = "Skype" },
       properties = { tag = tags[mouse.screen][4], floating = true, switchtotag = true } },
     -- { rule = { class = "Emacs",    instance = "emacs" },
